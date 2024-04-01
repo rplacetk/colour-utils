@@ -1,0 +1,14 @@
+{
+  "name": "image2canvas",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "jimp": "^0.22.12"
+  }
+}
