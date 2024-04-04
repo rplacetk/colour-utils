@@ -10,29 +10,15 @@ uint32_t hexToRGBA(const char* hex)
     return (red << 24) | (green << 16) | (blue << 8) | alpha;
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    const char* colorHexValues[] = {
-        "#000000", // Black
-        "#696969", // Dim Grey
-        "#555555", // Dark Grey
-        "#808080", // Medium Grey
-        "#D3D3D3", // Light Grey
-        "#FFFFFF", // White
-        "#FF9999", // Light Red
-        "#CC3333", // Medium Red
-        "#DC143C", // Crimson
-        "#990000", // Dark Red
-        "#800000", // Maroon
-        "#FF5700", // Reddit Orange
-    };
-
     printf("[ ");
-    for (int i = 0; i < sizeof(colorHexValues) / sizeof(colorHexValues[0]); ++i) {
-        uint32_t colorInt = hexToRGBA(colorHexValues[i]);
-        printf("%u, ", colorInt);
+    for (int i = 1; i < argc; i++)
+    {
+        uint32_t colourInt = hexToRGBA(argv[i]);
+        printf("%u%s", colourInt, i == argc - 1 ? "" : ", ");
     }
-    printf("]\n");
+    printf(" ]\n");
 
     return 0;
 }
