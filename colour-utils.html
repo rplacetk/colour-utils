@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>rplace.live Colour Utils</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #f6f7f8;
+			color: #333;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		h1 {
+			background-color: #ff4500;
+			color: white;
+			width: 100%;
+			padding: 20px;
+			margin: 0;
+			text-align: center;
+		}
+
+		p {
+			max-width: 800px;
+			margin: 20px;
+			font-size: 16px;
+		}
+
+		details {
+			max-width: 800px;
+			width: 100%;
+			margin: 20px;
+			padding: 20px;
+			background-color: white;
+			border: 1px solid #ddd;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			border-radius: 4px;
+		}
+
+		summary {
+			margin-bottom: 10px;
+			color: #0079d3;
+		}
+
+		summary:hover > .summary-title {
+			text-decoration: underline;
+		}
+
+		.summary-title {
+			font-size: 20px;
+			font-weight: bold;
+			cursor: pointer;
+			margin-top: 0px;
+			margin-bottom: 8px;
+			display: inline-block;
+		}
+
+		.summary-description {
+			color: #333;
+			display: block;
+			text-decoration: none;
+		}
+
+		summary::before {
+			content: "Toggle";
+			font-size: 14px;
+			color: white;
+			background-color: #0079d3;
+			border: none;
+			padding: 5px 10px;
+			cursor: pointer;
+			margin-top: -5px;
+			float: right;
+		}
+
+		.section-content {
+			display: flex;
+			flex-direction: column;
+			row-gap: 16px;
+		}
+	</style>
+</head>
+<body>
+	<h1>rplace.live Colour Utils</h1>
+	<p>This page contains a collection of simple convenience scripts for working with and modifying rplace canvas/palette data!</p>
+	<details>
+		<summary>
+			<h4 class="summary-title">image2palette</h4>
+			<strong class="summary-description">Extracts the colours from an image file into a palette of all present colours in the image.</strong>
+		</summary>
+		<div class="section-content">
+			<label for="paletteFileInput">Image file:</label>
+			<input type="file" id="paletteFileInput">
+			<label for="paletteSimilarityRange">Colour similarity margin:</label>
+			<input type="range" id="paletteSimilarityRange">
+			<button type="button" id="paletteDoneButton">Extract colour palette</button>
+			<div id="imageResult"></div>
+		</div>
+	</details>
+	<details>
+		<summary>
+			<h4 class="summary-title">canvas2image</h4>
+			<strong class="summary-description">Converts an rplace.live canvas file into a normal .png image.</strong>
+		</summary>
+		<div class="section-content">
+			<label for="canvasFileInput">Canvas file:</label>
+			<input type="file" id="canvasFileInput">
+			<label for="canvasWidthInput">Canvas width:</label>
+			<input type="text" id="canvasWidthInput">
+			<label for="canvasHeightInput">Canvas height:</label>
+			<input type="text" id="canvasHeightInput">
+			<label for="canvasPaletteInput">Palette (list of integer colours separated by spaces or JSON array):</label>
+			<input type="text" id="canvasPaletteInput">
+			<button type="button" id="canvasDoneButton">Generate image</button>
+		</div>
+	</details>
+	<details>
+		<summary>
+			<h4 class="summary-title">image2canvas</h4>
+			<strong class="summary-description">Converts a normal image file into a rplace.live canvas file.</strong>
+		</summary>
+		<div class="section-content">
+			<label for="imagePaletteInput">Palette (list of hex or integer colours separated by spaces OR a JSON array):</label>
+			<input type="text" id="imagePaletteInput">
+			<label for="imageCanvasFileInput">Canvas file:</label>
+			<input type="file" id="imageCanvasFileInput">
+			<button type="button" id="imageDoneButton">Generate canvas file</button>
+		</div>
+	</details>
+	<details>
+		<summary>
+			<h4 class="summary-title">hex2int</h4>
+			<strong class="summary-description">Converts a list of hexadecimal colours into a list of rplace.live-compatible integer colours.</strong>
+		</summary>
+		<div class="section-content">
+			<label for="hexInput">Colours (list of hex or separated by spaces OR a JSON array):</label>
+			<input type="text" id="hexInput">
+			<button type="button" id="hexDoneButton">Convert to integer colours</button>
+		</div>
+	</details>
+	<!--<details open>
+		<summary>order-palette</summary>
+		<div class="section-content">
+			<strong>Organises a hexedecimal or integer palette into a chronological list of integer colours.</strong>
+		</div>
+	</details>-->
+	<p>© Zekiah-A | rplace.live Colour Utils <a href="https://github.com/rplacetk/colour-utils">See Readme</a></p>
+</body>
+<script type="module">
+	import { image2Palette, image2Canvavs } from "./colour-utils.m.js";
+	const $ = document.querySelector.bind(document)
+
+	$("#paletteDoneButton").addEventListener("click", async (event) => {
+		const file = $("#paletteFileInput").files[0]
+		const margin = parseFloat($("#paletteSimilarityRange").value) / 100
+
+		if (file) {
+			try {
+				const colours = await image2Palette(file, margin)
+				console.log(colours)
+				imageResult.textContent = colours
+			}
+			catch (error) {
+				console.error(error)
+			}
+		}
+	})
+
+	$("#canvasDoneButton").addEventListener("click", async (event) => {
+		const file = $("#canvasFileInput").files[0]
+		
+	})
+
+	$("#imageDoneButton").addEventListener("click", async (event) => {
+
+	})
+
+	$("#hexDoneButton").addEventListener("click", async (event) => {
+
+	})
+</script>
+</html>
