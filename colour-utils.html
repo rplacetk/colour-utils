@@ -8,7 +8,7 @@
 		* {
 			box-sizing: border-box;
 		}
-
+		
 		body {
 			font-family: Arial, sans-serif;
 			background-color: #f6f7f8;
@@ -19,7 +19,7 @@
 			flex-direction: column;
 			align-items: center;
 		}
-
+		
 		h1 {
 			background-color: #ff4500;
 			color: white;
@@ -28,13 +28,13 @@
 			margin: 0;
 			text-align: center;
 		}
-
+		
 		p {
 			max-width: 800px;
 			margin: 20px;
 			font-size: 16px;
 		}
-
+		
 		details {
 			max-width: 800px;
 			width: 100%;
@@ -45,16 +45,16 @@
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 			border-radius: 4px;
 		}
-
+		
 		summary {
 			margin-bottom: 10px;
 			color: #0079d3;
 		}
-
+		
 		summary:hover > .summary-title {
 			text-decoration: underline;
 		}
-
+		
 		.summary-title {
 			font-size: 20px;
 			font-weight: bold;
@@ -63,13 +63,13 @@
 			margin-bottom: 8px;
 			display: inline-block;
 		}
-
+		
 		.summary-description {
 			color: #333;
 			display: block;
 			text-decoration: none;
 		}
-
+		
 		summary::before {
 			content: "Toggle";
 			font-size: 14px;
@@ -81,11 +81,19 @@
 			margin-top: -5px;
 			float: right;
 		}
-
+		
 		.section-content {
 			display: flex;
 			flex-direction: column;
 			row-gap: 16px;
+		}
+
+		fieldset {
+			margin: 0;
+			border: 0;
+			padding: 16px;
+			background-color: #d3d3d32b;
+			border-radius: 4px;
 		}
 	</style>
 </head>
@@ -112,14 +120,36 @@
 			<strong class="summary-description">Converts an rplace.live canvas file into a normal .png image.</strong>
 		</summary>
 		<div class="section-content">
-			<label for="canvasFileInput">Canvas file:</label>
-			<input type="file" id="canvasFileInput">
-			<label for="canvasWidthInput">Canvas width:</label>
-			<input type="text" id="canvasWidthInput">
-			<label for="canvasHeightInput">Canvas height:</label>
-			<input type="text" id="canvasHeightInput">
-			<label for="canvasPaletteInput">Palette (list of integer colours separated by commas OR a JSON array):</label>
-			<input type="text" id="canvasPaletteInput">
+			<div>
+				<label for="canvasUrlCheckbox">Fetch canvas & metadata from URL:</label>
+				<input type="checkbox" id="canvasUrlCheckbox">
+			</div>
+			<fieldset class="section-content" id="canvasUrlSection">
+				<label for="canvasUrlInput">Canvas server URL (such as https://raw.githubusercontent.com/rplacetk/canvas1/main):</label>
+				<input type="text" id="canvasUrlInput">
+			</fieldset>
+			<fieldset class="section-content" id="canvasInputsSection">
+				<div class="section-content">
+					<label for="canvasFileInput">Canvas file:</label>
+					<input type="file" id="canvasFileInput">
+				</div>
+				<div>
+					<label for="canvasMetadataCheckbox">Use raw JSON canvas metadata:</label>
+					<input type="checkbox" id="canvasMetadataCheckbox">
+				</div>
+				<fieldset class="section-content" id="canvasMetadataSection">
+					<label for="canvasMetadataInput">Enter raw JSON metadata (such as { width:number, height:number, palette:Array&lt;number&gt; }):</label>
+					<input type="text" id="canvasMetadataInput">
+				</fieldset>
+				<fieldset class="section-content" id="canvasDetailsSection">
+					<label for="canvasWidthInput">Canvas width:</label>
+					<input type="text" id="canvasWidthInput">
+					<label for="canvasHeightInput">Canvas height:</label>
+					<input type="text" id="canvasHeightInput">
+					<label for="canvasPaletteInput">Palette (comma-separated colors or JSON array):</label>
+					<input type="text" id="canvasPaletteInput">
+				</fieldset>	
+			</fieldset>
 			<button type="button" id="canvasDoneButton">Generate image</button>
 			<img id="canvasResult">
 		</div>
@@ -158,7 +188,7 @@
 	<p>© Zekiah-A | rplace.live Colour Utils <a href="https://github.com/rplacetk/colour-utils">See Readme</a></p>
 </body>
 <script type="module">
-	import { image2Palette, canvas2Image } from "./colour-utils.m.js";
+	import { image2Palette, canvasFile2Image, boardToPng } from "./colour-utils.m.js";
 	const $ = document.querySelector.bind(document)
 
 	function listLikeToArray(input) {
@@ -168,7 +198,7 @@
 			jsonInput = JSON.parse(input)
 		}
 		catch(e) { }
-
+		
 		if (jsonInput && Array.isArray(jsonInput)) {
 			array = jsonInput
 		}
@@ -178,16 +208,16 @@
 		
 		return array.map(value => (typeof value === "string" && value.trim(), value))
 	}
-
+	
 	function listLikeToIntArray(input) {
 		let strArray = listLikeToArray(input)
-
+		
 		const intArray = []
 		for (let item of strArray) {
 			if (typeof item === "string") {
 				item = item.trim()
 			}
-
+			
 			const integer = parseInt(item)
 			if (!Number.isNaN(integer)) {
 				intArray.push(integer)
@@ -195,11 +225,11 @@
 		}
 		return intArray
 	}
-
+	
 	$("#paletteDoneButton").addEventListener("click", async (event) => {
 		const file = $("#paletteFileInput").files[0]
 		const margin = parseFloat($("#paletteSimilarityRange").value) / 100
-
+		
 		if (file) {
 			try {
 				const colours = await image2Palette(file, margin)
@@ -212,19 +242,50 @@
 		}
 	})
 
+	function toggleSections(checkbox, section1, section2) {
+		function updateSections() {
+			const checked = checkbox.checked
+			section1.style.display = checked ? "flex" : "none"
+			section2.style.display = checked ? "none" : "flex"
+		}
+		checkbox.addEventListener("change", updateSections)
+		updateSections()
+	}
+	toggleSections($("#canvasUrlCheckbox"), $("#canvasUrlSection"), $("#canvasInputsSection"))
+	toggleSections($("#canvasMetadataCheckbox"), $("#canvasMetadataSection"), $("#canvasDetailsSection"))
+
 	$("#canvasDoneButton").addEventListener("click", async (event) => {
-		const file = $("#canvasFileInput").files[0]
-		const width = $("#canvasWidthInput").value
-		const height = $("#canvasHeightInput").value
-		const palette = listLikeToIntArray($("#canvasPaletteInput").value)
-		const image = await canvas2Image(file, { width, height, palette })
-		canvasResult.src = image
-	})
+		if ($("#canvasUrlCheckbox").checked) {
+			const canvasUrl = $("#canvasUrlInput").value
+			const placeRes = await fetch(canvasUrl + "/place")
+			const board = await placeRes.arrayBuffer()
+			const metadataRes = await fetch(canvasUrl + "/metadata.json")
+			const metadata = await metadataRes.json()
+			const image = await boardToPng(board, metadata)
+			canvasResult.src = image
+		}
+		else {
+			const file = $("#canvasFileInput").files[0]
+			let metadata = null
 
+			if ($("#canvasMetadataCheckbox").checked) {
+				metadata = $("#canvasMetadataInput").value
+			}
+			else {
+				const width = $("#canvasWidthInput").value
+				const height = $("#canvasHeightInput").value
+				const palette = listLikeToIntArray($("#canvasPaletteInput").value)
+				metadata = { width, height, palette }
+			}
+			const image = await canvas2Image(file, )
+			canvasResult.src = image
+		}
+	})
+	
 	$("#imageDoneButton").addEventListener("click", async (event) => {
-
+		
 	})
-
+	
 	$("#hexDoneButton").addEventListener("click", async (event) => {
 		const hexArray = listLikeToArray(hexInput.value)
 		const intArray = []

@@ -64,7 +64,7 @@ export async function image2Palette(imageFile, marginPercent = 0) {
  * @param {File} canvasFile,
  * @param {{ width: number, height: number, palette: Array<number> }} metadata
  */
-export async function canvas2Image(canvasFile, metadata) {
+export async function canvasFile2Image(canvasFile, metadata) {
     function readArrayBuffer(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
@@ -76,7 +76,7 @@ export async function canvas2Image(canvasFile, metadata) {
 
     try {
         const arrayBuffer = await readArrayBuffer(canvasFile)
-        const imageURL = await imageFromData(arrayBuffer, metadata)
+        const imageURL = await boardToPng(arrayBuffer, metadata)
         return imageURL
     }
     catch (error) {
@@ -85,7 +85,7 @@ export async function canvas2Image(canvasFile, metadata) {
     }
 }
 
-function imageFromData(arrayBuffer, metadata) {
+export function boardToPng(arrayBuffer, metadata) {
     return new Promise((resolve, reject) => {
         const { palette, width, height } = metadata
 
