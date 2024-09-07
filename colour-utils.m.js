@@ -74,48 +74,47 @@ export async function canvas2Image(canvasFile, metadata) {
         })
     }
 
-    function drawImageFromData(arrayBuffer, metadata) {
-        return new Promise((resolve, reject) => {
-            const { palette, width, height } = metadata;
-
-            const canvas = document.createElement("canvas")
-            const ctx = canvas.getContext("2d")
-            canvas.width = width
-            canvas.height = height
-
-            const imageData = ctx.createImageData(width, height);
-            const data = new Uint8ClampedArray(imageData.data.length);
-            const board = new Uint8Array(arrayBuffer)
-
-            for (let i = 0; i < board.byteLength; i++) {
-                const color = palette[board[i]]
-                const r = (color >> 16) & 0xFF
-                const g = (color >> 8) & 0xFF
-                const b = color & 0xFF
-
-                const idx = (i * 4)
-                data[idx] = r
-                data[idx + 1] = g
-                data[idx + 2] = b
-                data[idx + 3] = 255
-            }
-
-            imageData.data.set(data)
-            ctx.putImageData(imageData, 0, 0)
-
-            // Resolve the canvas as an image URL
-            const imageURL = canvas.toDataURL("image/png")
-            resolve(imageURL)
-        });
-    }
-
     try {
         const arrayBuffer = await readArrayBuffer(canvasFile)
-        const imageURL = await drawImageFromData(arrayBuffer, metadata)
+        const imageURL = await imageFromData(arrayBuffer, metadata)
         return imageURL
     }
     catch (error) {
         console.error("Failed to convert canvas to image:", error)
         return null
     }
+}
+
+function imageFromData(arrayBuffer, metadata) {
+    return new Promise((resolve, reject) => {
+        const { palette, width, height } = metadata
+
+        const canvas = document.createElement("canvas")
+        const ctx = canvas.getContext("2d")
+        canvas.width = width
+        canvas.height = height
+
+        const imageData = ctx.createImageData(width, height)
+        const data = new Uint8ClampedArray(imageData.data.length)
+        const board = new Uint8Array(arrayBuffer)
+
+        for (let i = 0; i < board.byteLength; i++) {
+            const color = palette[board[i]]
+            const r = (color >> 16) & 0xFF
+            const g = (color >> 8) & 0xFF
+            const b = color & 0xFF
+
+            const idx = (i * 4)
+            data[idx] = r
+            data[idx + 1] = g
+            data[idx + 2] = b
+            data[idx + 3] = 255
+        }
+
+        imageData.data.set(data)
+        ctx.putImageData(imageData, 0, 0)
+
+        const imageURL = canvas.toDataURL("image/png")
+        resolve(imageURL)
+    });
 }

@@ -121,6 +121,7 @@
 			<label for="canvasPaletteInput">Palette (list of integer colours separated by commas OR a JSON array):</label>
 			<input type="text" id="canvasPaletteInput">
 			<button type="button" id="canvasDoneButton">Generate image</button>
+			<img id="canvasResult">
 		</div>
 	</details>
 	<details>
@@ -133,7 +134,7 @@
 			<input type="text" id="imagePaletteInput">
 			<label for="imageCanvasFileInput">Canvas file:</label>
 			<input type="file" id="imageCanvasFileInput">
-			<button type="button" id="imageDoneButton">Generate canvas file</button>
+			<button type="button" id="imageDoneButton" disabled="">Generate canvas file</button>
 		</div>
 	</details>
 	<details>
@@ -175,7 +176,7 @@
 			array = input.split(",")
 		}
 		
-		return array.map(value => typeof value === "string" && value.trim())
+		return array.map(value => (typeof value === "string" && value.trim(), value))
 	}
 
 	function listLikeToIntArray(input) {
@@ -183,10 +184,16 @@
 
 		const intArray = []
 		for (let item of strArray) {
-			const integer = parseInt(item.trim())
-			if (!Number.isNaN(integer))
-			intArray.push(integer)
+			if (typeof item === "string") {
+				item = item.trim()
+			}
+
+			const integer = parseInt(item)
+			if (!Number.isNaN(integer)) {
+				intArray.push(integer)
+			}
 		}
+		return intArray
 	}
 
 	$("#paletteDoneButton").addEventListener("click", async (event) => {
@@ -209,7 +216,9 @@
 		const file = $("#canvasFileInput").files[0]
 		const width = $("#canvasWidthInput").value
 		const height = $("#canvasHeightInput").value
-		const paletteText = $("#canvasPaletteInput").value
+		const palette = listLikeToIntArray($("#canvasPaletteInput").value)
+		const image = await canvas2Image(file, { width, height, palette })
+		canvasResult.src = image
 	})
 
 	$("#imageDoneButton").addEventListener("click", async (event) => {
