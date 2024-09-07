@@ -118,7 +118,7 @@
 			<input type="text" id="canvasWidthInput">
 			<label for="canvasHeightInput">Canvas height:</label>
 			<input type="text" id="canvasHeightInput">
-			<label for="canvasPaletteInput">Palette (list of integer colours separated by spaces or JSON array):</label>
+			<label for="canvasPaletteInput">Palette (list of integer colours separated by commas OR a JSON array):</label>
 			<input type="text" id="canvasPaletteInput">
 			<button type="button" id="canvasDoneButton">Generate image</button>
 		</div>
@@ -129,7 +129,7 @@
 			<strong class="summary-description">Converts a normal image file into a rplace.live canvas file.</strong>
 		</summary>
 		<div class="section-content">
-			<label for="imagePaletteInput">Palette (list of hex or integer colours separated by spaces OR a JSON array):</label>
+			<label for="imagePaletteInput">Palette (list of hex or integer colours separated by commas OR a JSON array):</label>
 			<input type="text" id="imagePaletteInput">
 			<label for="imageCanvasFileInput">Canvas file:</label>
 			<input type="file" id="imageCanvasFileInput">
@@ -142,9 +142,10 @@
 			<strong class="summary-description">Converts a list of hexadecimal colours into a list of rplace.live-compatible integer colours.</strong>
 		</summary>
 		<div class="section-content">
-			<label for="hexInput">Colours (list of hex or separated by spaces OR a JSON array):</label>
+			<label for="hexInput">Colours (list of hex or separated by commas OR a JSON array):</label>
 			<input type="text" id="hexInput">
 			<button type="button" id="hexDoneButton">Convert to integer colours</button>
+			<div id="hexResult"></div>
 		</div>
 	</details>
 	<!--<details open>
@@ -156,8 +157,37 @@
 	<p>© Zekiah-A | rplace.live Colour Utils <a href="https://github.com/rplacetk/colour-utils">See Readme</a></p>
 </body>
 <script type="module">
-	import { image2Palette, image2Canvavs } from "./colour-utils.m.js";
+	import { image2Palette, canvas2Image } from "./colour-utils.m.js";
 	const $ = document.querySelector.bind(document)
+
+	function listLikeToArray(input) {
+		let array = []
+		let jsonInput = null
+		try {
+			jsonInput = JSON.parse(input)
+		}
+		catch(e) { }
+
+		if (jsonInput && Array.isArray(jsonInput)) {
+			array = jsonInput
+		}
+		else {
+			array = input.split(",")
+		}
+		
+		return array.map(value => typeof value === "string" && value.trim())
+	}
+
+	function listLikeToIntArray(input) {
+		let strArray = listLikeToArray(input)
+
+		const intArray = []
+		for (let item of strArray) {
+			const integer = parseInt(item.trim())
+			if (!Number.isNaN(integer))
+			intArray.push(integer)
+		}
+	}
 
 	$("#paletteDoneButton").addEventListener("click", async (event) => {
 		const file = $("#paletteFileInput").files[0]
@@ -177,7 +207,9 @@
 
 	$("#canvasDoneButton").addEventListener("click", async (event) => {
 		const file = $("#canvasFileInput").files[0]
-		
+		const width = $("#canvasWidthInput").value
+		const height = $("#canvasHeightInput").value
+		const paletteText = $("#canvasPaletteInput").value
 	})
 
 	$("#imageDoneButton").addEventListener("click", async (event) => {
@@ -185,7 +217,16 @@
 	})
 
 	$("#hexDoneButton").addEventListener("click", async (event) => {
-
+		const hexArray = listLikeToArray(hexInput.value)
+		const intArray = []
+		for (let hexValue of hexArray) {
+			if (hexValue.startsWith("#")) {
+				hexValue = hexValue.slice(1)
+			}
+			const intValue = parseInt(hexValue, 16)
+			intArray.push(intValue)
+		}
+		hexResult.textContent = intArray.join(", ")
 	})
 </script>
 </html>
