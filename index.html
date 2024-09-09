@@ -122,7 +122,7 @@
 		<div class="section-content">
 			<div>
 				<label for="canvasUrlCheckbox">Fetch canvas & metadata from URL:</label>
-				<input type="checkbox" id="canvasUrlCheckbox">
+				<input type="checkbox" id="canvasUrlCheckbox" checked>
 			</div>
 			<fieldset class="section-content" id="canvasUrlSection">
 				<label for="canvasUrlInput">Canvas server URL (such as https://raw.githubusercontent.com/rplacetk/canvas1/main):</label>
@@ -151,7 +151,8 @@
 				</fieldset>	
 			</fieldset>
 			<button type="button" id="canvasDoneButton">Generate image</button>
-			<img id="canvasResult">
+			<img id="canvasResultImg">
+			<a id="canvasResultLink" style="display: none;" download></a>
 		</div>
 	</details>
 	<details>
@@ -188,7 +189,7 @@
 	<p>© Zekiah-A | rplace.live Colour Utils <a href="https://github.com/rplacetk/colour-utils">See Readme</a></p>
 </body>
 <script type="module">
-	import { image2Palette, canvasFile2Image, boardToPng } from "./colour-utils.m.js";
+	import { image2Palette, canvasFile2Image, boardToPng } from "./index.m.js";
 	const $ = document.querySelector.bind(document)
 
 	function listLikeToArray(input) {
@@ -255,17 +256,24 @@
 	toggleSections($("#canvasMetadataCheckbox"), $("#canvasMetadataSection"), $("#canvasDetailsSection"))
 
 	$("#canvasDoneButton").addEventListener("click", async (event) => {
+		let imageBlob = null
+		let imageName = null
 		if ($("#canvasUrlCheckbox").checked) {
 			const canvasUrl = $("#canvasUrlInput").value
+			if (canvasUrl.endsWith("/")) {
+				canvasUrl = canvasUrl.slice(0, canvasUrl.length - 1)
+			}
+
+			imageName = canvasUrl.slice(canvasUrl.lastIndexOf("/") + 1) + ".png"
 			const placeRes = await fetch(canvasUrl + "/place")
 			const board = await placeRes.arrayBuffer()
 			const metadataRes = await fetch(canvasUrl + "/metadata.json")
 			const metadata = await metadataRes.json()
-			const image = await boardToPng(board, metadata)
-			canvasResult.src = image
+			imageBlob = await boardToPng(board, metadata)
 		}
 		else {
 			const file = $("#canvasFileInput").files[0]
+			imageName = "place_" + file.name + ".png"
 			let metadata = null
 
 			if ($("#canvasMetadataCheckbox").checked) {
@@ -277,11 +285,15 @@
 				const palette = listLikeToIntArray($("#canvasPaletteInput").value)
 				metadata = { width, height, palette }
 			}
-			const image = await canvas2Image(file, )
-			canvasResult.src = image
+			imageBlob = await canvas2Image(file, metadata)
 		}
+		const imageUrl = URL.createObjectURL(imageBlob)
+		canvasResultImg.src = imageUrl
+		canvasResultLink.style.display = "block"
+		canvasResultLink.href = imageUrl
+		canvasResultLink.textContent = "Download " + imageName
 	})
-	
+
 	$("#imageDoneButton").addEventListener("click", async (event) => {
 		
 	})

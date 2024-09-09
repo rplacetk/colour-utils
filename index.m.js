@@ -60,11 +60,10 @@ export async function image2Palette(imageFile, marginPercent = 0) {
 }
 
 /**
- * 
  * @param {File} canvasFile,
  * @param {{ width: number, height: number, palette: Array<number> }} metadata
  */
-export async function canvasFile2Image(canvasFile, metadata) {
+export async function canvasFile2Image(canvasFile, metadata, format="image/png") {
     function readArrayBuffer(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
@@ -76,7 +75,7 @@ export async function canvasFile2Image(canvasFile, metadata) {
 
     try {
         const arrayBuffer = await readArrayBuffer(canvasFile)
-        const imageURL = await boardToPng(arrayBuffer, metadata)
+        const imageURL = await boardToPng(arrayBuffer, metadata, format)
         return imageURL
     }
     catch (error) {
@@ -85,7 +84,12 @@ export async function canvasFile2Image(canvasFile, metadata) {
     }
 }
 
-export function boardToPng(arrayBuffer, metadata) {
+/**
+ * @param {ArrayBuffer} arrayBuffer
+ * @param {{ width: number, height: number, palette: Array<number> }} metadata
+ * @param {string} format
+ */
+export function boardToPng(arrayBuffer, metadata, format="image/png") {
     return new Promise((resolve, reject) => {
         const { palette, width, height } = metadata
 
@@ -100,9 +104,9 @@ export function boardToPng(arrayBuffer, metadata) {
 
         for (let i = 0; i < board.byteLength; i++) {
             const color = palette[board[i]]
-            const r = (color >> 16) & 0xFF
-            const g = (color >> 8) & 0xFF
-            const b = color & 0xFF
+            const r = (color >> 24) & 0xFF
+            const g = (color >> 16) & 0xFF
+            const b = (color >> 8) & 0xFF
 
             const idx = (i * 4)
             data[idx] = r
@@ -113,8 +117,6 @@ export function boardToPng(arrayBuffer, metadata) {
 
         imageData.data.set(data)
         ctx.putImageData(imageData, 0, 0)
-
-        const imageURL = canvas.toDataURL("image/png")
-        resolve(imageURL)
-    });
+        canvas.toBlob(resolve, format)
+    })
 }
